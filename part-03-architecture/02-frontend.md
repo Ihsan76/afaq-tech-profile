@@ -148,3 +148,25 @@ export function LanguageSwitcher() {
   );
 }
 ```
+
+---
+
+## نظام التنبيهات الفورية (Global Toast Notifications System)
+
+تم بناء وتكامل نظام تنبيهات فورية (Toast Notifications) موحد وعالي الأداء في الواجهة الأمامية لضمان تجربة مستخدم تفاعلية وفورية عند إنجاز العمليات أو حدوث أخطاء.
+
+### 1. مخزن الحالة (`frontend/src/store/toast.ts`)
+يعتمد النظام على Zustand لإدارة الحالة العابرة للتنبيهات:
+- **الأنواع المدعومة (`ToastType`)**: `success` (نجاح), `error` (خطأ), `warning` (تحذير), `info` (معلومة).
+- **الخصائص (`ToastMessage`)**: `id`, `type`, `title?`, `message`, `duration` (افتراضي 4000ms), `action?` (زر إجراء تفاعلي).
+- **المساعدات المتاحة**:
+  - `useToast()`: هوك لسهولة الاستدعاء داخل المكونات (`const { success, error } = useToast()`).
+  - `toast`: كائن ثابت يسمح بإطلاق التنبيهات خارج المكونات أو مباشرة (`toast.success(...)`, `toast.error(...)`).
+
+### 2. مكون العرض الرسومي (`frontend/src/components/ui/Toaster.tsx`)
+- مُثبّت جزيئياً في الجذر الرئيسي (`frontend/src/app/[locale]/layout.tsx`) ليكون متاحاً في كل صفحات المنصة.
+- **التصميم والتجاوب**:
+  - تثبيت علوي مرن (`fixed top-4 z-[9999]`) مع دعم كامل للاتجاهين (RTL عبر `rtl:left-4` و LTR عبر `ltr:right-4`).
+  - تأثير زجاجي (`backdrop-blur-md`) وأنماط ألوان مرتبطة بمتغيرات الثيم الحالي (`--color-success`, `--color-error`, `--color-warning`, `--color-primary`, `--color-surface`).
+  - أيقونات ملونة متوافقة مع نوع التنبيه (عبر مكتبة `lucide-react`)، مع أزرار الإغلاق السريع والإجراءات الاختيارية.
+  - دعم الوصولية (`role="alert"`, `aria-live="polite"`).
