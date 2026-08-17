@@ -254,6 +254,8 @@
 - [x] شاشات 4 أدوار: `/school`, `/teacher`, `/parent`, `/student` مع KPIs وأفعال سريعة ✅
 - [x] نافذة إعارة المكتبة: `borrower` + `borrower_role` + `borrower_name` مع بحث متعدد الأدوار ✅
 - [x] `is_admin()` يدعم `school_admin` و `developer` و `school_librarian` و `school_accountant` و `school_transport_officer` ✅
+- [x] **المرحلة 1**: تلميع وبنود تفاصيل لوحات الأدوار (`/teacher/*`, `/parent/*`, `/student/*`) ✅
+- [x] **المرحلة 2**: التحقق من تفاصيل صفحات الإدارة المدرسية المساعدة (الرسوم `/school/fees`، النقل `/school/transport`، والإعلانات) ✅
 
 ---
 
