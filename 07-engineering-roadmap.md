@@ -41,14 +41,56 @@
 
 ## ثالثاً: إضافات مستقبلية مقترحة (Future Roadmap Enhancements)
 
+### عالية الأولوية (موثقة)
 1. **نظام المحادثات الفورية (Live Chat & WebSockets):**
    - قنوات تواصل حي مباشرة بين المعلمين وأولياء الأمور أو الطلاب باستخدام قنوات WebSocket.
+   - المدة: 5-7 أيام | الملف: `09-live-chat-architecture.md`
 
 2. **بناء الجداول بالسحب والإفلات (Matrix Grid Drag-and-Drop Builder):**
    - أداة تفاعلية متقدمة تتيح لمدير المدرسة سحب الحصص وتوزيعها يدوياً على شبكة الجدول بصرياً.
+   - المدة: 3-4 أيام | الملف: `10-matrix-grid-builder.md`
 
 3. **تحليلات متقدمة وتنبؤية (Predictive AI Analytics):**
    - تقارير تنبؤية دقيقة عن مستويات الطلاب المعرضين للتعثر الدراسي وتقديم مقترحات علاجية.
+   - المدة: 2-3 أيام | الملف: `11-predictive-ai-analytics.md`
 
 4. **تطبيق موبايل أصلي (React Native / Expo):**
    - بناء تطبيق هاتف محمول مخصص لأولياء الأمور والمعلمين لتسهيل المتابعة على مدار الساعة.
+   - المدة: 5-7 أيام | الملف: `12-react-native-mobile.md`
+
+5. **نظام النطق النصي الحقيقي (TTS):**
+   - Gemini TTS + ElevenLabs لتحويل النصوص إلى كلام طبيعي بـ 10 لغات.
+   - المدة: 1-2 يوم | الملف: `13-tts-architecture.md`
+
+6. **تأمين HTTP Headers (CSP & Security):**
+   - Content-Security-Policy، X-Frame-Options، HSTS، nonce-based scripts.
+   - المدة: 1 يوم | الملف: `19-csp-security-headers.md`
+
+7. **النسخ الاحتياطي والاستعادة (pg_dump + S3):**
+   - نسخ احتياطي تلقائي يومياً مع تشفير AES-256 واستعادة في < 1 ساعة.
+   - المدة: 1-2 يوم | الملف: `20-backup-s3-disaster.md`
+
+8. **التوافق التنظيمي (GDPR/CCPA/COPPA):**
+   - Right to Erasure، Data Portability، Parental Consent، Processing Logs.
+   - المدة: 2-3 أيام | الملف: `17-gdpr-compliance.md`
+
+### متوسطة الأولوية (موثقة)
+9. **البحث المتقدم (Elasticsearch/OpenSearch):**
+   - بحث متعدد الحقول مع Autocomplete ودعم 10 لغات.
+   - المدة: 3-4 أيام | الملف: `16-elasticsearch-search.md`
+
+10. **تحسين الأداء (Lighthouse >90):**
+    - Next.js Image Optimization، Bundle Splitting، Core Web Vitals.
+    - المدة: 2-3 أيام | الملف: `18-lighthouse-performance.md`
+
+11. **العمل بدون إنترنت (IndexedDB Offline):**
+    - مزامنة الحضور والواجبات بدون إنترنت عبر Service Worker + IndexedDB.
+    - المدة: 3-4 أيام | الملف: `14-indexeddb-offline.md`
+
+12. **لوحة تحكم المديرية (Directorate Dashboard):**
+    - متابعة 5-50 مدرسة مع KPIs مركبة ومقارنة أداء.
+    - المدة: 2-3 أيام | الملف: `15-directorate-dashboard.md`
+
+13. **تكامل Google Classroom:**
+    - استيراد الطلاب، تصدير الدرجات، مزامنة الواجبات.
+    - المدة: 2-3 أيام | الملف: `21-google-classroom-integration.md`

@@ -88,23 +88,30 @@
 - **التكامل والبنية التحتية**: دمج Celery في `requirements.txt`، إصلاحات خطوط أنابيب CI وحراسة الأمان (`.gitleaksignore` لملف `render.yaml`، السماح بـ 404 لـ QA EXTRA_ROUTES)، وحل كافة تحذيرات ruff (بما في ذلك إصلاح أخطاء المسافات البيضاء اللاحقة trailing whitespace في `views.py` و `tests.py`) و eslint و linter عبر الخلفية والواجهة الأمامية.
 ---
 
-## ❌ لم يبدأ — بنود مستقبلية
+## ❌ لم يبدأ — بنود مستقبلية (موثقة)
 
-### أولوية منخفضة
-| المجال | التفاصيل |
-|--------|----------|
-| Matrix Grid Builder | سحب وإفلات يدوي للجدول |
-| TTS حقيقي | Gemini/ElevenLabs |
-| IndexedDB | مزامنة بدون إنترنت |
-| Directorate Dashboard | متابعة عدة مدارس |
-| WebSocket | إشعارات فورية + محادثات |
-| Elasticsearch | بحث متقدم |
-| React Native | تطبيق موبايل |
-| GDPR/CCPA/COPPA | توافق تنظيمي |
-| Lighthouse >90 | أداء |
-| CSP headers | أمان |
-| pg_dump + S3 | نسخ احتياطي |
-| Google Classroom | تكامل خارجي |
+### عالية الأولوية
+| المجال | التفاصيل | الملف |
+|--------|----------|-------|
+| Matrix Grid Builder | سحب وإفلات يدوي للجدول (3-4 أيام) | `10-matrix-grid-builder.md` |
+| Live Chat & WebSockets | محادثات فورية + إشعارات (5-7 أيام) | `09-live-chat-architecture.md` |
+| Predictive AI Analytics | تحليلات تنبؤية بالـ AI (2-3 أيام) | `11-predictive-ai-analytics.md` |
+| React Native Mobile | تطبيق موبايل Expo (5-7 أيام) | `12-react-native-mobile.md` |
+| TTS حقيقي | Gemini TTS + ElevenLabs (1-2 يوم) | `13-tts-architecture.md` |
+| CSP + Security Headers | تأمين HTTP headers (1 يوم) | `19-csp-security-headers.md` |
+| pg_dump + S3 Backup | نسخ احتياطي تلقائي (1-2 يوم) | `20-backup-s3-disaster.md` |
+| GDPR/CCPA/COPPA | توافق تنظيمي (2-3 أيام) | `17-gdpr-compliance.md` |
+
+### متوسطة الأولوية
+| المجال | التفاصيل | الملف |
+|--------|----------|-------|
+| Elasticsearch | بحث متقدم (3-4 أيام) | `16-elasticsearch-search.md` |
+| Lighthouse >90 | تحسين أداء (2-3 أيام) | `18-lighthouse-performance.md` |
+| IndexedDB | مزامنة بدون إنترنت (3-4 أيام) | `14-indexeddb-offline.md` |
+| Directorate Dashboard | متابعة عدة مدارس (2-3 أيام) | `15-directorate-dashboard.md` |
+| Google Classroom | تكامل خارجي (2-3 أيام) | `21-google-classroom-integration.md` |
+
+**المدة الإجمالية المقدرة: 33-48 يوم عمل**
 
 ---
 
@@ -118,7 +125,7 @@
 5. ~~واجهة `/teacher/grades` (إدخال الدرجات)~~ ✅
 6. ~~واجهة `/student/grades` (عرض الدرجات)~~ ✅
 7. ~~واجهة `/parent/grades` (عرض درجات الأبناء)~~ ✅
-8. تصدير كشف الدرجات إلى PDF — مُلغى (يمكن إضافته لاحقاً)
+8. ~~تصدير كشف الدرجات إلى PDF~~ — مُلغى (يمكن إضافته لاحقاً)
 
 ### المرحلة 2: الواجبات (Assignments) ✅
 1. ~~إنشاء موديلات `Assignment` و `AssignmentSubmission` في `apps/schools/models.py`~~ ✅
@@ -130,6 +137,22 @@
 7. ~~واجهة `/parent/assignments` (عرض)~~ ✅
 
 ### المرحلة 3: تحسين الصفحات واللوحات والتدقيق النهائي ✅
-1. ~~**المرحلة الأولى:** تلميع وبنود تفاصيل لوحات الأدوار (المعلم `/teacher/*`، ولي الأمر `/parent/*`، والطالب `/student/*`)~~ ✅ مكتمل
-2. ~~**المرحلة الثانية:** التحقق من تفاصيل صفحات الإدارة المدرسية المساعدة (الرسوم `/school/fees`، النقل `/school/transport`، والإعلانات)~~ ✅ مكتمل
-3. ~~**المرحلة الثالثة:** التدقيق والفحص النهائي (تشغيل الاختبارات وتحديث التقارير)~~ ✅ مكتمل بالكامل وملتزم به.
+1. ~~**المرحلة الأولى:** تلميع وبنود تفاصيل لوحات الأدوار~~ ✅ مكتمل
+2. ~~**المرحلة الثانية:** التحقق من تفاصيل صفحات الإدارة المدرسية المساعدة~~ ✅ مكتمل
+3. ~~**المرحلة الثالثة:** التدقيق والفحص النهائي~~ ✅ مكتمل بالكامل وملتزم به.
+
+### المرحلة 4: الميزات المستقبلية — **قيد التوثيق والتنفيذ** 🔄
+1. ~~توثيق 9 ميزات جديدة~~ ✅ مكتمل (13-21)
+2. 🔲 تنفيذ Matrix Grid Builder (`10-matrix-grid-builder.md`)
+3. 🔲 تنفيذ Live Chat & WebSockets (`09-live-chat-architecture.md`)
+4. 🔲 تنفيذ Predictive AI Analytics (`11-predictive-ai-analytics.md`)
+5. 🔲 تنفيذ React Native Mobile (`12-react-native-mobile.md`)
+6. 🔲 تنفيذ TTS حقيقي (`13-tts-architecture.md`)
+7. 🔲 تنفيذ CSP + Security Headers (`19-csp-security-headers.md`)
+8. 🔲 تنفيذ pg_dump + S3 Backup (`20-backup-s3-disaster.md`)
+9. 🔲 تنفيذ GDPR/CCPA/COPPA (`17-gdpr-compliance.md`)
+10. 🔲 تنفيذ Elasticsearch (`16-elasticsearch-search.md`)
+11. 🔲 تنفيذ Lighthouse >90 (`18-lighthouse-performance.md`)
+12. 🔲 تنفيذ IndexedDB Offline (`14-indexeddb-offline.md`)
+13. 🔲 تنفيذ Directorate Dashboard (`15-directorate-dashboard.md`)
+14. 🔲 تنفيذ Google Classroom (`21-google-classroom-integration.md`)
