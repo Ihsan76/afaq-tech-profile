@@ -19,7 +19,7 @@
 | العنصر | التفاصيل |
 |--------|----------|
 | **الحالة** | ✅ مكتمل بالكامل — جاهز للنشر |
-| **الحالة التفصيلية** | [00-project-status.md](00-project-status.md) |
+| **الحالة التفصيلية** | [docs/01-project-status.md](docs/01-project-status.md) |
 | **Frontend** | Next.js 16+ / TypeScript / Tailwind CSS v4 |
 | **Backend** | Django 5.x / DRF / Python 3.12+ (15 تطبيق) |
 | **Database** | PostgreSQL 15+ (Supabase) |
@@ -33,12 +33,12 @@
 
 ## هيكل الملفات
 
-### الوثائق الأساسية
+### الوثائق الأساسية (الجذر + docs/)
 | الملف | المحتوى |
 |-------|---------|
 | [AGENTS.md](AGENTS.md) | قواعد AI Agent الإلزامية ⭐ |
-| [00-project-status.md](00-project-status.md) | حالة المشروع والإحصائيات |
-| [07-engineering-roadmap.md](07-engineering-roadmap.md) | المراجعة الهندسية وخريطة الطريق |
+| [docs/01-project-status.md](docs/01-project-status.md) | حالة المشروع والإحصائيات |
+| [docs/02-engineering-roadmap.md](docs/02-engineering-roadmap.md) | المراجعة الهندسية وخريطة الطريق |
 
 ### الجزء الأول: الهوية والرؤية
 - [00. الملخص التنفيذي](part-01-identity/00-executive-summary.md)
@@ -180,23 +180,45 @@
 - [07. إعدادات الموقع](part-13-page-builder/07-site-settings.md)
 - [08. إدارة الصلاحيات](part-13-page-builder/08-permissions.md)
 
-### الميزات المكتملة (التوثيق الأصلي)
-| الملف | الميزة |
-|-------|--------|
-| [completed-features/09-live-chat-architecture.md](completed-features/09-live-chat-architecture.md) | Live Chat & WebSockets |
-| [completed-features/10-matrix-grid-builder.md](completed-features/10-matrix-grid-builder.md) | Matrix Grid Builder |
-| [completed-features/11-predictive-ai-analytics.md](completed-features/11-predictive-ai-analytics.md) | Predictive AI Analytics |
-| [completed-features/12-react-native-mobile.md](completed-features/12-react-native-mobile.md) | React Native Mobile |
-| [completed-features/13-tts-architecture.md](completed-features/13-tts-architecture.md) | TTS Architecture |
-| [completed-features/14-indexeddb-offline.md](completed-features/14-indexeddb-offline.md) | IndexedDB Offline |
-| [completed-features/15-directorate-dashboard.md](completed-features/15-directorate-dashboard.md) | Directorate Dashboard |
-| [completed-features/16-elasticsearch-search.md](completed-features/16-elasticsearch-search.md) | Elasticsearch Search |
-| [completed-features/17-gdpr-compliance.md](completed-features/17-gdpr-compliance.md) | GDPR/CCPA/COPPA |
-| [completed-features/18-lighthouse-performance.md](completed-features/18-lighthouse-performance.md) | Lighthouse >90 |
-| [completed-features/19-csp-security-headers.md](completed-features/19-csp-security-headers.md) | CSP Security Headers |
-| [completed-features/20-backup-s3-disaster.md](completed-features/20-backup-s3-disaster.md) | Backup & Disaster Recovery |
-| [completed-features/21-google-classroom-integration.md](completed-features/21-google-classroom-integration.md) | Google Classroom |
-| [completed-features/08-school-feature-gating.md](completed-features/08-school-feature-gating.md) | School Feature Gating |
+---
+
+### نظام المدارس (school/)
+| الملف | المحتوى |
+|-------|---------|
+| [README](school/README.md) | فهرس + حالة التنفيذ |
+| [01-feature-gating.md](school/01-feature-gating.md) | تقييد الميزات حسب الباقة |
+| [02-rbac-roles.md](school/02-rbac-roles.md) | الأدوار والصلاحيات المدرسية |
+| [03-directorate-dashboard.md](school/03-directorate-dashboard.md) | لوحة تحكم المديرية |
+| [04-google-classroom.md](school/04-google-classroom.md) | تكامل Google Classroom |
+| [05-enterprise-features.md](school/05-enterprise-features.md) | الميزات المستقبلية للمؤسسات |
+| [06-matrix-grid.md](school/06-matrix-grid.md) | بناء الجداول بالسحب والإفلات |
+| [part-01-vision/](school/part-01-vision/) | الرؤية والأهداف |
+| [part-02-sis-core/](school/part-02-sis-core/) | النواة الأساسية SIS |
+| [part-03-collaboration/](school/part-03-collaboration/) | التعاون والمتابعة |
+| [part-04-whatsapp/](school/part-04-whatsapp/) | إشعارات الواتساب |
+| [part-05-ai-tutoring/](school/part-05-ai-tutoring/) | المساعد الذكي |
+| [part-06-implementation/](school/part-06-implementation/) | خطة التنفيذ |
+| [part-07-voice-analytics/](school/part-07-voice-analytics/) | الصوت والتحليلات |
+
+---
+
+### الميزات المكتملة (completed-features/)
+| الملف | الميزة | التصنيف |
+|-------|--------|---------|
+| [01-live-chat.md](completed-features/01-live-chat.md) | Live Chat & WebSockets | تواصل |
+| [02-predictive-ai.md](completed-features/02-predictive-ai.md) | Predictive AI Analytics | ذكاء اصطناعي |
+| [03-react-native-mobile.md](completed-features/03-react-native-mobile.md) | React Native Mobile | موبايل |
+| [04-tts.md](completed-features/04-tts.md) | Text-to-Speech | صوت |
+| [05-offline-storage.md](completed-features/05-offline-storage.md) | IndexedDB Offline | تخزين |
+| [06-search.md](completed-features/06-search.md) | Elasticsearch / pg_search | بحث |
+| [07-gdpr-compliance.md](completed-features/07-gdpr-compliance.md) | GDPR/CCPA/COPPA | توافق |
+| [08-performance.md](completed-features/08-performance.md) | Lighthouse >90 | أداء |
+| [09-security-headers.md](completed-features/09-security-headers.md) | CSP Security Headers | أمان |
+| [10-backup-recovery.md](completed-features/10-backup-recovery.md) | Backup & Disaster Recovery | نسخ احتياطي |
+| [11-execution-roadmap.md](completed-features/11-execution-roadmap.md) | خطة التنفيذ المتقدمة | خطة |
+| [12-completion-roadmap.md](completed-features/12-completion-roadmap.md) | خطة الإنجاز | خطة |
+
+---
 
 ### الملاحق
 - [01. معجم المصطلحات](appendices/01-glossary.md)
@@ -206,22 +228,12 @@
 - [05. قواعد Cloudflare](appendices/05-cloudflare-rules.sh)
 - [06. خطة التنفيذ](appendices/06-roadmap-checklist.md)
 
-### ملفات المدارس (School SIS)
-- [README](afaq-school-profile/README.md) — فهرس + حالة التنفيذ
-- [part-01-vision/](afaq-school-profile/part-01-vision/) — الرؤية والأهداف
-- [part-02-sis-core/](afaq-school-profile/part-02-sis-core/) — النواة الأساسية
-- [part-03-collaboration/](afaq-school-profile/part-03-collaboration/) — التعاون والمتابعة
-- [part-04-whatsapp/](afaq-school-profile/part-04-whatsapp/) — إشعارات الواتساب
-- [part-05-ai-tutoring/](afaq-school-profile/part-05-ai-tutoring/) — المساعد الذكي
-- [part-06-implementation/](afaq-school-profile/part-06-implementation/) — خطة التنفيذ
-- [part-07-voice-analytics/](afaq-school-profile/part-07-voice-analytics/) — الصوت والتحليلات
-
 ---
 
 ## للبدء
 
 1. اقرأ **[AGENTS.md](AGENTS.md)** — قواعد AI Agent الإلزامية
-2. اقرأ **[00-project-status.md](00-project-status.md)** — حالة المشروع الحالية
+2. اقرأ **[docs/01-project-status.md](docs/01-project-status.md)** — حالة المشروع الحالية
 3. افهم المعمارية التقنية (الجزء الثالث)
 4. افهم نظام Page Builder (الجزء الثالث عشر)
 
