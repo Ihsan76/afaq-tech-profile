@@ -46,7 +46,7 @@
 
 ### التطبيقات المفعلة (14 تطبيقاً)
 ```
-apps/users        — المستخدمون + JWT Auth
+apps/users        — المستخدمون + JWT Auth + UserRole + RoleRequest
 apps/academics    — المراحل، المواد، المناهج، الوحدات
 apps/lessonplans  — خطط الدروس المولّدة بالـ AI
 apps/ai           — تتبع عمليات AI + Provider Router (Gemini/OpenAI/Ollama)
@@ -56,10 +56,10 @@ apps/pages        — نظام الصفحات + البلوكات + القوائ�
 apps/blog         — المدوّنة (BlogCategory, BlogPost) + APIs عامة وإدارية
 apps/marketplace  — سوق الخدمات (Service, Order, Review) + 10 endpoints
 apps/gamification — التلعيب (نقاط، شارات، إنجازات، تحديات، سلاسل، لوحة متصدرين، مستويات)
-apps/courses      — الدورات التعليمية
-apps/ebooks       — الكتب الإلكترونية
-apps/subscriptions — الباقات والاشتراكات (Plan, Subscription, Organization)
-apps/schools      — المدارس SIS (School/AcademicYear/Section/Enrollments/Announcements/WhatsApp)
+apps/courses      — الدورات التعليمية (Course.instructor_role FK→UserRole)
+apps/ebooks       — الكتب الإلكترونية (Ebook.author_role FK→UserRole)
+apps/subscriptions — الباقات والاشتراكات (Plan, Subscription)
+apps/schools      — المدارس SIS + SchoolStaff + SchoolManagerRequest
 ```
 
 ### قاعدة بيانات
@@ -322,21 +322,80 @@ dashboard, profile, landing, servicesMarketplace, gamification
 - **الكتابة** (POST/PUT/DELETE): صلاحيات الأقسام في `apps/users/permissions.py` (انظر 8.1ب)
 - **الملفات الشخصية**: `IsAuthenticated` — للمستخدمين المسجلين
 
-### 8.1أ أدوار المستخدمين (User.Role)
+### 8.1أ نظام الأدوار (RBAC الشامل — أغسطس 2026)
+
+#### نموذج UserRole (المصدر الوحيد للصلاحيات)
+```
+apps/users/models.py → UserRole(user FK, role, organization FK, is_active, assigned_by FK, assigned_at)
+```
+- **`User.role`** = حقل قديم محفوظ للتوافق — **لا تعتمد عليه**. المصدر الوحيد: `UserRole` objects.
+- **`RoleService`** (`apps/users/services.py`) — الخدمة الموحّدة لكل عمليات الأدوار:
+  - `has_role(user, role, org=None)` — تحقق مع فلترة org
+  - `has_role_anywhere(user, role)` — تحقق بدون فلترة org
+  - `has_role_in_school(user, role, school)` — تحقق في مدرسة محددة
+  - `assign_role(user, role, assigned_by=None, org=None)` — تعيين + إنشاء UserRole
+  - `revoke_role(user, role, org=None)` — إزالة (set is_active=False)
+  - `can_assign_role(assigner, target_role)` — تحقق من صلاحية التعيين
+  - `get_user_roles(user, org=None)` — جلب كل الأدوار النشطة
+
+#### أدوار المستخدمين (`User.Role` choices + `UserRole.role`)
 ```
 student          — طالب
 teacher          — معلم
 parent           — ولي أمر
 creator          — منشئ محتوى
+instructor       — مدرّب (لدورات الأكاديمية)
+publisher        — ناشر (للكتب الإلكترونية)
+service_provider — مزود خدمات (سوق الخدمات)
 admin            — مدير النظام (كل الصلاحيات)
-developer        — مطوّر (تقني: AI، إعدادات، محتوى، مستخدمون قراءة فقط…)
-support          — دعم فني (رسائل + عرض المستخدمين — قراءة فقط)
-content_manager  — مدير محتوى (صفحات/مدونة/كتب/دورات/مناهج)
-finance          — مشرف مالي (اشتراكات وباقات فقط)
+developer        — مطوّر (تقني)
+support          — دعم فني (قراءة فقط)
+content_manager  — مدير محتوى
+finance          — مشرف مالي
 ```
 - أدوار فريق الإدارة `ADMIN_ROLES = {admin, developer, support, content_manager, finance}` — كلها تدخل `/admin`.
-- **مدير المنشأة/المنظمة ليس دور مستخدم** — يُدار عبر `OrganizationMembership` بدور `MANAGER` (أو مالك منظمة بباقة school/enterprise)؛ لوحته `/organization` عبر `manager_organization(user)` في `apps/subscriptions/services.py` (تقبل المالك أو عضوية MANAGER نشطة).
-- **مدير المدرسة = دور مستخدم `school_admin`** — يُعيَّن عبر `School.manager` (FK→User, related_name=`managed_schools`): عند تعيينه في `SchoolViewSet.perform_update` يُحوَّل المستخدم تلقائياً إلى `school_admin` (إلا إن كان من فريق الإدارة)، وعند إزالته يعود `student` إن لم تتبقَّ له مدارس مُدارة. `school_admin` **ليس** ضمن `ADMIN_ROLES` → لا يدخل `/admin`؛ يدير مدرسته فقط عبر `schools` API (يُشتق `user_school_ids`/`user_section_ids` من المدارس المُدارة)، ويمنع إنشاء/حذف المدارس، ويمكنه إعلانات طارئة لمدرسته (`SchoolAnnouncementViewSet`).
+- **التسجيل الافتراضي**: المستخدم الجديد يحصل على دور `user` (وليس `student`) بعد تأكيد البريد. `student`/`parent` يُعيَّنان تلقائياً عند حفظ الملف الشخصي أو الانضمام لمدرسة.
+
+#### نموذج RoleRequest (طلبات الأدوار — أغسطس 2026)
+```
+apps/users/models.py → RoleRequest(user FK, request_type, status, reviewed_by FK, reviewed_at, notes)
+```
+- Types: `instructor`, `publisher`, `service_provider`
+- Status: `pending`, `approved`, `rejected`
+- Endpoint: `GET/POST /api/v1/users/role-requests/` (إنشاء + عرض) + `POST .../review/` (admin)
+- Frontend: `/auth/role-request` — نموذج طلب + قائمة طلباتي
+- عند الموافقة: `RoleService.assign_role()` + إنشاء `UserRole` تلقائياً
+
+#### نموذج SchoolStaff (طاقم المدرسة — أغسطس 2026)
+```
+apps/schools/models.py → SchoolStaff(school FK, user FK, staff_role, is_active)
+```
+- Endpoint: `GET/POST /api/v1/schools/school-staff/` (CRUD)
+- Frontend: `/school/admin/staff` — إدارة طاقم المدرسة (إضافة/حذف معلمين ومساعدين)
+
+#### نموذج SchoolManagerRequest (نقل ملكية المدرسة — أغسطس 2026)
+```
+apps/schools/models.py → SchoolManagerRequest(school FK, from_user FK, to_user FK, status, reviewed_at, notes)
+```
+- Status: `pending`, `approved`, `rejected`
+- Endpoint: `GET/POST /api/v1/schools/manager-requests/` + `POST .../review/`
+- Frontend: `/school/admin/transfer` — طلب نقل ملكية المدرسة لمدير جديد
+
+#### حقول الدورات/الكتب/الخدمات (FK إلى UserRole — وليس User مباشرة)
+```
+Course.instructor_role = FK → UserRole (property: .instructor → User)
+Ebook.author_role     = FK → UserRole (property: .author → User)
+Service.provider_role = FK → UserRole (property: .provider → User)
+```
+- **لا تستخدم** `Course(instructor=user)` — خطأ! استخدم `Course(instructor_role=role_object)`
+- **لا تستخدم** `select_related('instructor')` — خطأ! استخدم `select_related('instructor_role')`
+- عند إنشاء دورات/كتب/خدمات عبر API: `RoleService.assign_role()` ينشئ `UserRole` أولاً ثم يمرره كـ FK
+
+#### ملاحظات مهمة
+- **مدير المنشأة/المنظمة**: عضوية `OrganizationMembership` بدور MANAGER (أو مالك منظمة بباقة school/enterprise) — منفصل عن `school_admin`.
+- **مدير المدرسة = دور `school_admin`** عبر `School.manager` (FK→User) — نطاقه مدرسته فقط عبر `user_school_ids`، لا يدخل `/admin`.
+- `is_admin()` في `apps/schools/views.py` يقبل admin + developer (قسم schools).
+- `is_school_admin()` يتحقق عبر `RoleService.has_role(user, 'school_admin')`.
 
 ### 8.1ب صلاحيات الأقسام (`apps/users/permissions.py`)
 - `IsAdminRole` — أي دور إداري (الكتابة محظورة لـ support).
@@ -572,7 +631,7 @@ find src/app -name "page.tsx" | sort
 
 ```
 1. "آفاق تكنولوجي" منصة — ليست شركة
-2. Backend: Django 5.x + DRF + Python 3.12+ (13 تطبيقاً)
+2. Backend: Django 5.x + DRF + Python 3.12+ (14 تطبيقاً)
 3. Frontend: Next.js 16+ + TypeScript + Tailwind
 4. قاعدة البيانات: Supabase PostgreSQL (Transaction Pooler)
 5. 40 نوع بلوك، 6 ثيمات، 10 لغات
@@ -588,12 +647,12 @@ find src/app -name "page.tsx" | sort
 15. Gamification بكاملها: 12 موديل، 16 API، 16 نشاطاً — جاهز، يحتاج واجهة أمامية
 16. اللغات والترجمات من DB: Language (10) + TranslationKey (1305) في apps/core، TranslationProvider يدمج القيم الحية، إدارة من /admin/translations و /admin/languages
 17. المصادقة محصّنة: Argon2id، JWT RS256، logout (blacklist)، تأكيد بريد عبر Resend، brute-force (5/15د)، rate limiting على endpoints الدخول، Google OAuth جاهز (ينتظر client ID/secret في .env)
-18. لوحة تحكم المدير (المرحلة 4): إحصائيات `/core/admin/stats/` في صفحة `/admin`، إدارة السوق `/admin/marketplace` (تصنيفات/خدمات/طلبات/مراجعات عبر endpoints `marketplace/admin/*`)، مراقبة AI `/admin/ai-runs` (سجلات AIRun + فلاتر + إحصائيات عبر `ai/admin/air-runs*`)
+18. **RBAC الشامل (أغسطس 2026)**: نظام أدوار موحد عبر `UserRole` (FK table) — `RoleService` للتعيين/الإزالة/التحقق؛ `RoleRequest` لطلب الأدوار؛ `SchoolStaff` لطاقم المدرسة؛ `SchoolManagerRequest` لنقل الملكية؛ تسجيل مبسّط (ادخار student/parent مع تأكيد البريد → دور `user` افتراضياً)؛ الدورات/الكتب/الخدمات تستخدم FK إلى `UserRole`
 19. **تمايز Curriculum Injection (المنهاج الرسمي)**: نموذج `Unit` يتضمن `subject` (FK) + `outcomes` (قائمة نواتج التعلم) + `content`؛ سكربت `seed_curricula.py` يزرع مناهج السعودية والأردن بصفوف/مواد/وحدات/نواتج (46 وحدة)؛ النهاية `GET /api/v1/academics/curricula/resolve/?grade=&subject=` تعيد المنهاج المطابق + وحداته؛ توليد الخطة يقبل `unit` اختيارياً ويحقن نواتج التعلم تلقائياً (دالة `build_curriculum_context` في `apps/lessonplans/views.py`)؛ منتقي وحدة في `lesson-plans/new`. ✅ **Gemini حُلّ**: ترحيل `google.generativeai` → `google.genai` (من `google import genai`)
 20. **الأداء (أغسطس 2026)**: الكاش في الإنتاج = `LocMemCache` (Upstash محجوب إقليمياً)؛ ترجمات مصفّاة باللغة (561KB ← ~56KB)؛ لا N+1 في المدوّنة/الكتب؛ لا طوفان prefetch؛ بطاقات كتب بغلاف افتراضي محسّن
 21. **الدفع (أغسطس 2026)**: واجهة مزوّدات موحّدة `apps/marketplace/payments/{base,registry,stripe_provider,myfatoorah_provider}.py` — Stripe Checkout + MyFatoorah بالتوازي (اختيار عبر `PAYMENT_PROVIDER=auto|stripe|myfatoorah`)؛ webhook موحّد `payments/webhook/<provider>/` (تحقق توقيع لكل مزوّد) + `orders/<pk>/checkout/` لإعادة الدفع؛ حقول Order عامة: `payment_provider`/`payment_session_id`/`payment_transaction_id`؛ بدون أي مفتاح → إنشاء طلب بلا دفع مع `payment_available=false`. ملاحظة: Stripe غير متاح للتاجر الأردني — استخدم MyFatoorah كبوابة فعلية.
 22. **الاشتراكات والباقات (أغسطس 2026)**: تطبيق `apps/subscriptions` (13) — نماذج `Plan` (باقات متعددة اللغات بأسعار ومدة `duration_days`) + `Subscription` (طلب/اشتراك بلاستخدام نفس واجهة الدفع)؛ endpoints `subscriptions/{plans,current,purchase}` + admin plans؛ webhook يوصل بالـ `kind` (metadata stripe / `UserDefinedField` myfatoorah) ليفعّل الاشتراك ويرفع `subscription_plan` للمستخدم؛ باقات مُزرعة بـ data migration؛ صفحة `/subscriptions` تعرض الباقات + باقتك الحالية + زر اشتراك (تدخل `/register` للزوار، والدفع يفعّل فوراً).
-23. **الأدوار والصلاحيات (أغسطس 2026)**: أدوار `User.Role` = student/teacher/parent/creator/school_admin + فريق الإدارة admin/developer/support/content_manager/finance (يدخلون `/admin`، القائمة تُفلتر حسب الدور في `admin/layout.tsx`). الصلاحيات في `apps/users/permissions.py` بأقسام (`SECTION_ROLES`) — تغيير أدوار/باقات المستخدمين لـ admin فقط (`IsSystemAdmin`)، support قراءة فقط. `school_admin` = مدير مدرسة يُعيَّن من حقل `School.manager` (انظر §8) — نطاقه مدرسته عبر `user_school_ids`، ولا يدخل `/admin`. مدير المنشأة/المنظمة = عضوية `OrganizationMembership` بدور MANAGER (أو مالك بباقة school/enterprise) ولوحته `/organization` — منفصل عن مدير النظام. إدارة المستخدمين `/admin/users` تدعم ترقيم الصفحات (`page`/`page_size`≤200) + بحث بالاسم/البريد (`search`) + فلتر مدرسة (`school`) + فرز (`ordering`: name/email/date_joined/role).
+23. **الأدوار والصلاحيات (أغسطس 2026 — RBAC شامل)**: نظام أدوار موحد عبر `UserRole` (FK table) — `RoleService` الموحّد يدير التعيين/الإزالة/التحقق؛ `RoleRequest` للمستخدمين لطلب أدوار (instructor/publisher/service_provider) مع موافقة الأدمن؛ `SchoolStaff` لإدارة طاقم المدرسة؛ `SchoolManagerRequest` لنقل ملكية المدارس؛ الدورات/الكتب/الخدمات تستخدم FK إلى `UserRole` (وليس User مباشرة) عبر `instructor_role`/`author_role`/`provider_role`；تسجيل مبسّط (ادخار student/parent مع تأكيد البريد → دور `user` افتراضياً). الصلاحيات في `apps/users/permissions.py` بـ `SECTION_ROLES` — `school_admin` نطاقه مدرسته فقط.
 24. **المدارس SIS (أغسطس 2026)**: تطبيق `apps/schools` (14) — نماذج School (`manager` FK), AcademicYear, Section, StudentEnrollment, TeacherAssignment, SchoolAnnouncement (`is_emergency`), FamilyLink, AnnouncementReadReceipt, ParentTeacherTicket, WhatsAppNotificationLog, UserAISetting, WeeklyReport, FAQ, SupportRequest, Attachment؛ endpoints: schools/academic-years/sections/enrollments/teacher-assignments/announcements/tickets/family-links/faqs/attachments + user/settings + my-context + voice/transcribe + voice/synthesize + analytics (ساعات الذروة) + weekly-summary + support/email + bulk/import/export؛ استيراد مدارس الأردن الرسمية `fetch_opendata_schools` (7,296 مدرسة). واجهة `/school-followup`. — تغطي المرحلتين 1-2 من `afaq-school-profile` جزئياً.
 25. **Gamification UI (أغسطس 2026)**: صفحة `/gamification` (نقاط، شارات، إنجازات، تحديات، سلسلة، مستوى) — الواجهة الأمامية مكتملة (كانت Backend-only).
 26. **صفحات الخدمات الهجينة (أغسطس 2026)**: `/services/[slug]` تُعرض CMS-first عبر `BlockRenderer` (بلوكات من `/pages/services/{slug}/`) مع fallback مطابق بصرياً مبني من namespace `services` في i18n (7 خدمات)؛ سلاكات غير معروفة → `notFound()`؛ أُزيل `services` من `RESERVED_PREFIXES` في `[...slug]`. مساعد `resolveLink()` في `src/lib/i18n.ts` يمنع إضافة بادئة locale للروابط المطلقة (mailto/http/tel) والروابط `#`.
@@ -607,4 +666,4 @@ find src/app -name "page.tsx" | sort
 
 ---
 
-*آخر تحديث: أغسطس 2026*
+*آخر تحديث: 19 أغسطس 2026 — RBAC شامل + CI أخضر (90 اختبار)*
