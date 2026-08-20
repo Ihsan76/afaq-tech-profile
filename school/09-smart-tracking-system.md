@@ -430,6 +430,254 @@ POST /api/v1/schools/telemetry/     ← كل 10-30 ثانية
 
 ---
 
+### 6.5 مزامنة قاعدة بيانات الوجوه (Face Database Sync — `students_faces.db`)
+
+#### لماذا قاعدة بيانات محلية وليس سحابية مباشرة؟
+- الكاميرا داخل الحافلة قد لا يكون لديها إنترنت دائماً.
+- التعرف على الوجه يجب أن يكون **فوريًا** (أقل من ثانية) — الاتصال بالخادم السحابي في كل مرة يسبب تأخيراً غير مقبول.
+- الجودة: المقارنة المحلية أدق لأن بصمات الوجه (`Embeddings`) ثابتة ولا تتغير.
+
+#### ماذا تحتوي قاعدة بيانات الوجوه (`students_faces.db`)؟
+```
+┌─────────────────────────────────────────────────┐
+│           students_faces.db (SQLite)             │
+│                                                  │
+│  student_id  │  student_name  │  face_embedding  │
+│  105         │  أحمد محمد     │  [0.12, -0.45...] │
+│  108         │  فاطمة علي     │  [0.08, 0.33...]  │
+│  112         │  خالد سعيد     │  [-0.01, 0.22...] │
+│                                                  │
+│  + جدول offline_events (للتخزين المؤقت)          │
+└─────────────────────────────────────────────────┘
+```
+
+**ملاحظة هامة:** لا يتم تخزين صور الطلاب الحقيقية على الحاسوب المصغر — فقط **المصفوفات الرقمية (Facial Embeddings)** التي هي أرقام رياضية بحتة لا يمكن عكسها لاستعادة الصورة الأصلية (data privacy / GDPR compliance).
+
+#### آلية التحميل الأولي (Initial Download / Seeding):
+```
+1. الحاسوب المصغر يتصل بشبكة المدرسة (Wi-Fi)
+   │
+2. يرسل طلب GET:
+   GET /api/v1/schools/bus-routes/{route_id}/students/faces/
+   Headers: { "Authorization": "Bearer {device_api_token}" }
+   │
+3. الخادم يُعيد JSON يحتوي:
+   {
+     "students": [
+       {
+         "student_id": 105,
+         "student_name": "أحمد محمد",
+         "face_embedding": [0.12, -0.45, 0.08, ...]  // مصفوفة 128-512 قيمة
+       },
+       ...
+     ]
+   }
+   │
+4. الحاسوب يخزن البيانات في students_faces.db محلياً
+```
+
+#### آلية المزامنة التلقائية عند بدء التشغيل (Startup Sync):
+```
+┌──────────────────────────────────────────────────────┐
+│            مزامنة عند بدء تشغيل الحافلة               │
+│                                                      │
+│  1. الحاسوب المصغر يُشغّل صباحاً (مع تشغيل الحافلة) │
+│  2. يتحقق من اتصال الإنترنت                          │
+│     ├── لا يوجد إنترنت → يใช้students_faces.db القديمة│
+│     └── يوجد إنترنت → المتابache                      │
+│  3. يرسل طلب GET مع version_hash أو last_sync_time   │
+│  4. الخادم يقارن ويعيد فقط التغييرات:                │
+│     ├── طلاب جدد (إضافة)                             │
+│     ├── طلاب انتقلوا (حذف)                           │
+│     └── بصمات محدّثة (تحديث)                         │
+│  5. الحاسوب يُحدّث students_faces.db محلياً           │
+│  6. يبدأ العمل فوراً (Online أو Offline)              │
+└──────────────────────────────────────────────────────┘
+```
+
+#### آلية التحديث الفوري عبر السحابة (OTA Push Update):
+```
+1. مدير المدرسة يُضيف طالباً جديداً في /school/transport
+   └── يُربط الطالب بخط سير / حافلة محددة
+   │
+2. الخادم يولّد "حدث تحديث" (Update Event)
+   │
+3. يُرسل إشارة خفيفة عبر WebSocket/MQTT إلى الحاسوب المصغر
+   │
+4. الحاسوب المصغر يستقبل الإشارة:
+   ├── يطلب البيانات المحدّثة من الخادم
+   ├── يُحدّث students_faces.db محلياً
+   └── يُكمل العمل بدون أي تدخل بشري
+```
+
+#### لماذا نستخدم Embeddings (مصفوفات رياضية) وليس صور؟
+```
+الصور الحقيقية:                    Embeddings (المصفوفات الرقمية):
+├── كبيرة الحجم (MBs)              ├── صغيرة جداً (KBs)
+├── تنتهك خصوصية الطلاب (GDPR)     ├── لا يمكن عكسها لاستعادة الصورة
+├── بطيئة في المعالجة              ├── مقارنة رياضية سريعة جداً
+├── تختلف مع تغير الإضاءة          ├── ثابتة وغير متأثرة بالإضاءة
+└── تحتاج نموذج AI محلي ثقيل       └── تعمل بـ CPU خفيف فقط
+```
+
+---
+
+### 6.6 إعداد الحاسوب المصغر داخل الحافلة (Edge PC Setup)
+
+#### أولاً: العتاد المطلوب (Hardware Requirements)
+
+| المكون | المواصفات | السبب |
+|--------|-----------|-------|
+| **الحاسوب المصغر** | Raspberry Pi 4/5 (4-8GB RAM) أو Mini PC (Intel N100) | مناسب للحجم والتكلفة وأداء AI كافٍ |
+| **الكاميرا** | كاميرا IP أو USB HD بزاوية واسعة، مقاومة للاهتزاز | التقاط وجوه الطلاب في بيئة حافلة متغيرة |
+| **راوتر الإنترنت** | 4G/5G Router مع شريحة بيانات (SIM) | اتصال مستمر بالمنصة |
+| **مزود الطاقة** | محول DC-DC (12/24V → 5V) + Mini UPS / Power Hat | حماية من انقطاع الكهرباء عند إطفاء المحرك |
+| **بطاقة التخزين** | MicroSD / SSD بسعة 64GB+ | تشغيل نظام Linux + تخزين قاعدة البيانات |
+| ** HDD/SSD خارجي** (اختياري) | 256GB+ | تخزين سجلات الفيديو القديمة |
+
+#### ثانياً: نظام التشغيل والمكتبات البرمجية (Software Stack)
+
+| المكون | الإصدار/النوع | الوظيفة |
+|--------|-------------|---------|
+| **نظام التشغيل** | Ubuntu Server 22.04 LTS أو Raspberry Pi OS Lite | استقرار + تشغيل 24/7 |
+| **Python** | 3.10+ | لغة السكربت الرئيسي |
+| **OpenCV** | 4.x+ | لتقاط ومعالجة تدفق الفيديو |
+| **face_recognition** أو **onnxruntime** | أحدث إصدار | للتعرف على الوجه بكفاءة |
+| **requests** | Python package | لإرسال طلبات HTTP إلى المنصة |
+| **sqlite3** | Python built-in | قاعدة البيانات المحلية |
+| **Systemd** | Linux built-in | تشغيل السكربت تلقائياً عند الإقلاع |
+
+#### ثالثاً: خطوات الإعداد والتهيئة
+
+**الخطوة 1: إعداد نظام التشغيل والاتصال**
+```bash
+# تثبيت Ubuntu Server على MicroSD/SSD
+# تفعيل SSH للإعداد عن بُعد
+sudo apt update && sudo apt install -y openssh-server
+
+# إعداد اتصال الشبكة (Wi-Fi أو Ethernet)
+sudo nano /etc/netplan/01-config.yaml
+sudo netplan apply
+
+# اختبار الاتصال بالإنترنت
+ping api.afaq.app
+```
+
+**الخطوة 2: تثبيت المكتبات البرمجية**
+```bash
+# تثبيت Python و المكتبات
+sudo apt install -y python3 python3-pip python3-venv
+
+# إنشاء بيئة عمل معزولة
+python3 -m venv /opt/afaq/venv
+source /opt/afaq/venv/bin/activate
+
+# تثبيت المكتبات
+pip install opencv-python face_recognition requests numpy
+```
+
+**الخطوة 3: إنشاء ملف الإعدادات المحلي (`config.json`)**
+```json
+{
+  "server_url": "https://api.afaq.app/api/v1/schools/scan/",
+  "telemetry_url": "https://api.afaq.app/api/v1/schools/telemetry/",
+  "faces_sync_url": "https://api.afaq.app/api/v1/schools/bus-routes/{route_id}/students/faces/",
+  "device_identifier": "CAM-BUS-101",
+  "api_token": "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890",
+  "bus_id": 12,
+  "route_id": 5,
+  "camera_url": "rtsp://admin:password@192.168.1.100:554/stream",
+  "sync_interval_seconds": 300,
+  "telemetry_interval_seconds": 10,
+  "offline_buffer_max": 1000
+}
+```
+
+**الخطوة 4: وضع ملف الإعدادات في الموقع الآمن**
+```bash
+sudo mkdir -p /opt/afaq
+sudo cp config.json /opt/afaq/config.json
+sudo chmod 600 /opt/afaq/config.json  # فقط root يمكنه القراءة
+```
+
+**الخطوة 5: إعداد التشغيل التلقائي عبر Systemd (Auto-Start)**
+لضمان عمل السكربت تلقائياً عند تشغيل الحاسوب بدون تدخل بشري:
+
+1. إنشاء ملف الخدمة:
+```ini
+# /etc/systemd/system/afaq-bus-agent.service
+
+[Unit]
+Description=Afaq Bus Smart Tracking Edge Agent
+After=network.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/opt/afaq/venv/bin/python /opt/afaq/agent.py
+WorkingDirectory=/opt/afaq
+Restart=always
+RestartSec=10
+User=root
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+```
+
+2. تفعيل الخدمة:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable afaq-bus-agent
+sudo systemctl start afaq-bus-agent
+
+# للتحقق من حالة الخدمة:
+sudo systemctl status afaq-bus-agent
+
+# لعرض السجلات:
+sudo journalctl -u afaq-bus-agent -f
+```
+
+#### رابعاً: ملخص سير العمل الكامل بعد الإعداد
+```
+┌──────────────────────────────────────────────────────┐
+│        سير العمل الكامل بعد الإعداد الناجح            │
+│                                                      │
+│  1. الحاسوب المصغر يُشغّل مع تشغيل الحافلة          │
+│  2. Linux يُشغّل الخدمة (afaq-bus-agent) تلقائياً   │
+│  3. السكربت يتصل بالإنترنت ويجلب بيانات الوجوه      │
+│  4. يحفظ students_faces.db محلياً                    │
+│  5. يبدأ التقاط الفيديو من كاميرا IP                │
+│  6. يكشف الوجوه ويُطابقها محلياً                    │
+│  7. يُرسل أحداث التعرف إلى /api/v1/schools/scan/    │
+│  8. إذا انقطع الإنترنت → يُخزّن الأحداث مؤقتاً      │
+│  9. عند عودة الاتصال → يُرسل البيانات المخزنة        │
+│  10. يُحدّث بيانات الوجوه عند بدء التشغيل التالي     │
+│                                                      │
+│  النتيجة: نظام ذكي يعمل بدون تدخل بشري 24/7         │
+└──────────────────────────────────────────────────────┘
+```
+
+#### خامساً: الصيانة والدعم عن بُعد
+```bash
+# الاتصال بالحاسوب المصغر عبر SSH من المدرسة
+ssh root@192.168.1.50
+
+# مراقبة السجلات مباشرة
+journalctl -u afaq-bus-agent -f
+
+# إعادة تشغيل الخدمة يدوياً (عند الحاجة)
+sudo systemctl restart afaq-bus-agent
+
+# تحديث السكربت عن بُعد (إذا تم نشر إصدار جديد)
+scp agent.py root@192.168.1.50:/opt/afaq/agent.py
+ssh root@192.168.1.50 "systemctl restart afaq-bus-agent"
+
+# عرض حالة قاعدة البيانات المحلية
+sqlite3 /opt/afaq/students_faces.db "SELECT COUNT(*) FROM students;"
+```
+
+---
+
 ## 7. كيف يتعامل السائق مع النظام (.Driver Integration)
 
 ### تسجيل السائق ودوره في المنصة:
@@ -533,6 +781,8 @@ POST /api/v1/schools/devices/{id}/heartbeat/
 7. إصلاح صلاحيات تتبع الحافلات → مسؤول النقل فقط ✅
 8. نموذج BusStop + APIs + واجهة المحطات ✅
 9. توثيق شامل لآليات ربط الأجهزة ✅
+10. توثيق مزامنة قاعدة بيانات الوجوه (Face DB Sync — Initial + Startup + OTA) ✅
+11. توثيق إعداد الحاسوب المصغر بالكامل (Hardware + Software + Systemd + SSH) ✅
 
 ---
 
