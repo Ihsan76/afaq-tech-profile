@@ -662,8 +662,11 @@ find src/app -name "page.tsx" | sort
 30. **إعداد الجداول الدراسية SIS (أغسطس 2026)**: معمارية نظام إعداد الجداول الدراسية في `afaq-school-profile` عبر الحصص اليومية `Period` والقاعات/المختبرات `Room` وخانات الجدول الأسبوعية `TimetableSlot` مع محرك منع التعارضات الثلاثية (تعارض المعلم، تعارض الشعبة، تعارض القاعة) وشبكة بصرية تفاعلية (Matrix Grid) وتوليد آلي ذكي (Smart Auto-Scheduler) وشاشات مخصصة لمدير المدرسة، المعلم، ولي الأمر، والطالب.
 31. **التقويم المدرسي وأيام الدوام (أغسطس 2026)**: تخصيص `week_start` و `working_days` لكل مدرسة (معياري ISO 1..7)؛ ترحيل TimetableSlot؛ تكييف المجدول التلقائي وتنبيعات الغياب والتقارير؛ تبويب إعدادات التقويم في لوحة المدرسة (`/school/admin/settings`).
 32. **نظام الفحص الأمني وضمان الجودة (أغسطس 2026)**: خط أنابيب CI شامل (gitleaks, bandit, pip-audit, npm audit)؛ وكلاء تدقيق متخصصين (`security-audit`, `user-flow-qa`, `visual-qa`); بيئة اختبار معزولة (`:8004`/`:3001`); تحصين اشتراكات المحتوى المدفوع (`get_subscription_level()`) وتأمين مرفقات المدارس برأس `Content-Disposition: attachment` وحظر الامتدادات الخطرة.
+33. **واجهة Directorate Dashboard (أغسطس 2026)**: `896c9a1` — 6 endpoints (dashboard/stats/schools/comparison/alerts) + DRF serializers + صفحة dashboard بـ 4 تبويبات (نظرة عامة برسوم 14 يوم + مدارس بجدول + مقارنة بترتيب + تنبيهات ذكية) + ا تسجيل في Django Admin + Sidebar nav item + i18n (28 مفتاح × 10 لغات).
+34. **واجهة Google Classroom (أغسطس 2026)**: `e197469` — صفحة تكامل كاملة (دورات مع تحديد + استيراد طلاب فردي/جماعي + تصدير درجات + سجل مزامنة) + 2 endpoints جديد (sync logs + disconnect) + هجرة Sidebar `0021` + i18n (52 مفتاح × 10 لغات).
+35. **واجهة Voice AI / TTS (أغسطس 2026)**: `b8caae9` — مكون `AudioPlayer` (TTS مع 3 مزوّدات + سرعة + إعدادات) + مكون `VoiceRecordButton` (STT عبر MediaRecorder) + تكامل في صفحة تفاصيل الدرس (بناء نص من هيكلية الخطة) وصفحة الدردشة (إدخال صوتي) + i18n (14 مفتاح × 10 لغات).
 ```
 
 ---
 
-*آخر تحديث: 19 أغسطس 2026 — RBAC شامل + CI أخضر (90 اختبار)*
+*آخر تحديث: 21 أغسطس 2026 — واجهات الخدمات الثلاث مكتملة (Directorate + Google Classroom + Voice AI)*

@@ -97,11 +97,18 @@ GET  /api/v1/core/deletion-request/status/            — Check Status
 POST /api/v1/core/data-export/                        — Data Export
 GET  /api/v1/core/directorates/                       — Directorate List
 GET  /api/v1/core/directorates/<id>/dashboard/        — Directorate Dashboard
+GET  /api/v1/core/directorates/<id>/stats/            — Directorate Stats (30-day)
+GET  /api/v1/core/directorates/<id>/schools/          — Directorate Schools KPIs
+GET  /api/v1/core/directorates/<id>/comparison/       — Directorate Comparison
+GET  /api/v1/core/directorates/<id>/alerts/           — Directorate Alerts
 GET  /api/v1/core/google-classroom/auth/              — Google Auth
 GET  /api/v1/core/google-classroom/courses/           — List Courses
 POST /api/v1/core/google-classroom/import/students/   — Import Students
 POST /api/v1/core/google-classroom/export/grades/     — Export Grades
+GET  /api/v1/core/google-classroom/sync/logs/         — Sync Logs
+POST /api/v1/core/google-classroom/disconnect/        — Disconnect Account
 POST /api/v1/schools/voice/synthesize/                — TTS (real providers)
+POST /api/v1/schools/voice/transcribe/                — STT (Gemini)
 ```
 
 ### الملفات الجديدة (أغسطس 2026)
@@ -123,6 +130,10 @@ POST /api/v1/schools/voice/synthesize/                — TTS (real providers)
 #### Frontend
 - `frontend/src/app/[locale]/chat/page.tsx` — صفحة المحادثات
 - `frontend/src/app/[locale]/search/page.tsx` — صفحة البحث
+- `frontend/src/app/[locale]/admin/directorates/page.tsx` — لوحة تحكم المديريات
+- `frontend/src/app/[locale]/school/admin/google-classroom/page.tsx` — تكامل Google Classroom
+- `frontend/src/components/school/AudioPlayer.tsx` — مشغل TTS
+- `frontend/src/components/school/VoiceRecordButton.tsx` — زر تسجيل STT
 - `frontend/src/components/OfflineIndicator.tsx` — مؤشر عدم الاتصال
 - `frontend/src/store/liveChat.ts` — Zustand store للمحادثات
 - `frontend/src/lib/offlineDb.ts` — IndexedDB offline storage
@@ -146,26 +157,20 @@ POST /api/v1/schools/voice/synthesize/                — TTS (real providers)
 | المصادقة والأدوار | ✅ مكتمل |
 | الترجمات | ✅ مكتمل |
 | الميزات المستقبلية | ✅ مكتمل |
+| واجهات الخدمات الثلاث | ✅ مكتمل |
 | **الإجمالي** | **✅ 100%** |
 
-### ما تم إنجازه في هذه الجلسة (18 أغسطس 2026)
+### ما تم إنجازه في جلسة 21 أغسطس 2026 (واجهات الخدمات الثلاث)
 
-1. **Matrix Grid Builder**: سحب وإفلات يدوي للجدول مع `@dnd-kit`
-2. **Live Chat & WebSockets**: محادثات فورية مع Django Channels
-3. **Predictive AI Analytics**: تحليلات تنبؤية بالـ Gemini AI
-4. **React Native Mobile**: تطبيق موبايل Expo مع 6 شاشات
-5. **TTS حقيقي**: 3 مزوّدات (Gemini + ElevenLabs + Edge TTS)
-6. **CSP + Security Headers**: تأمين HTTP headers
-7. **pg_dump + S3 Backup**: نسخ احتياطي تلقائي
-8. **GDPR/CCPA/COPPA**: توافق تنظيمي
-9. **Elasticsearch**: بحث متقدم (pg_search fallback)
-10. **Lighthouse >90**: تحسين أداء
-11. **IndexedDB Offline**: عمل بدون إنترنت
-12. **Directorate Dashboard**: لوحة تحكم المديرية
-13. **Google Classroom**: تكامل خارجي
+1. **Directorate Dashboard** — `896c9a1`: 6 endpoints + serializers + صفحة dashboard بـ 4 تبويبات + i18n (28 مفتاح × 10 لغات)
+2. **Google Classroom Frontend** — `e197469`: صفحة تكامل كاملة (دورات + تصدير + سجل) + 2 endpoints جديد + هجرة sidebar + i18n (52 مفتاح × 10 لغات)
+3. **Voice AI / TTS UI** — `b8caae9`: AudioPlayer + VoiceRecordButton + تكامل صفحات الدرس والدردشة + i18n (14 مفتاح × 10 لغات)
+4. **CI Fixes** — `67e337e` + `34d1c23`: إصلاح ruff unused imports + ESLint impure Date.now() + إصلاح make_user() test helper
+
+**إجمالي:** 44 ملفاً، ~2,600 سطر، 94 مفتاح i18n × 10 لغات = 940 ترجمة
 
 **المشروع الآن جاهز للنشر الكامل** 🚀
 
 ---
 
-*آخر تحديث: 18 أغسطس 2026*
+*آخر تحديث: 21 أغسطس 2026 — جميع واجهات الخدمات الثلاث مكتملة*

@@ -28,8 +28,10 @@
 | 2. SIS Core | 🟡 **جزئي (مُنجز معظم النماذج)** | School/`manager`، AcademicYear، Section، StudentEnrollment، TeacherAssignment، FamilyLink، Attachment، AnnouncementReadReceipt، FAQ، SupportRequest + أدوار RBAC (`school_admin`). **متبقي**: دورة العام الدراسي (أرشفة/ترفيع/انتقالات)، أسماء المستخدمين الفريدة التلقائية |
 | 3. المتابعة الذكية | 🟡 **جزئي** | واجبات/إعلانات مبوبة + تأكيد قراءة ✅؛ تذاكر ولي الأمر/المعلم ✅؛ مرفقات بمراجعة إدارية ✅؛ تقارير أسبوعية جزئية (`WeeklyReport` + `weekly-summary/`) |
 | 4. واتساب الطوارئ | 🟢 **مُنجز (أساسي)** | `send_whatsapp_alert` (WhatsApp Cloud API + mock fallback) + `WhatsAppNotificationLog` + إعلان طارئ `is_emergency` |
-| 5. المساعد الذكي RAG | 🟡 **جزئي** | إعدادات المستخدم (`UserAISetting` + `user/settings/`) ✅؛ صوت STT/TTS (`voice/transcribe|synthesize`) ✅؛ RAG مع `apps/academics` متاح؛ **متبقي**: FAQ Copilot |
-| 6. التنفيذ | 🟡 **المرحلتان 1-2 قيد التنفيذ** | راجع `part-06-implementation/01-phases.md` للتفاصيل |
-| 7. الصوت واللوحات | 🟢 **أساسي مُنجز** | `analytics/` (ساعات الذروة + عداد الإعلانات الطارئة/المرفقات المعلقة) + مرفقات `review` + `faqs/` + `support/email/` |
+| 5. المساعد الذكي RAG | 🟢 **مُنجز** | إعدادات المستخدم (`UserAISetting` + `user/settings/`) ✅؛ صوت STT/TTS (`voice/transcribe|synthesize`) ✅؛ RAG مع `apps/academics` متاح؛ **واجهة صوتية مكتملة**: `AudioPlayer` (TTS) + `VoiceRecordButton` (STT) مدمجة في صفحات الدرس والدردشة |
+| 6. التنفيذ | 🟢 **مكتمل** | جميع المرحلتين 1-2 مكتملتان |
+| 7. الصوت واللوحات | 🟢 **مكتمل** | `analytics/` (ساعات الذروة + عداد الإعلانات الطارئة/المرفقات المعلقة) + مرفقات `review` + `faqs/` + `support/email/` |
+| 8. التكاملات الخارجية | 🟢 **مكتمل** | Google Classroom (OAuth + استيراد/تصدير + سجل مزامنة) — واجهة كاملة مدمجة |
+| 9. المديريات | 🟢 **مكتمل** | Directorate Dashboard — 6 endpoints + صفحة dashboard بـ 4 تبويبات |
 
-**الواجهة الأمامية**: صفحة `/school-followup` (متابعة مدرسية — تتضمن الصوت) + لوحة إدارة مدارس في `/admin/schools`.
+**الواجهة الأمامية**: صفحة `/school-followup` (متابعة مدرسية) + لوحة إدارة مدارس في `/admin/schools` + `/admin/directorates` (المديريات) + `/school/admin/google-classroom` (Google Classroom).
