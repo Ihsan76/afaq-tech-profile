@@ -15,6 +15,7 @@
 5. [المساعد الذكي والمنهاج RAG (`part-05-ai-tutoring/01-copilot-rag.md`)](./part-05-ai-tutoring/01-copilot-rag.md)
 6. [مراحل وخطة التنفيذ (`part-06-implementation/01-phases.md`)](./part-06-implementation/01-phases.md)
 7. [الصوت ولوحات التحكم والدعم الفني (`part-07-voice-analytics/01-voice-dashboards.md`)](./part-07-voice-analytics/01-voice-dashboards.md)
+8. **[دليل Google Classroom الشامل (`05-google-classroom-guide.md`)](./05-google-classroom-guide.md)** — شرح تفصيلي للخدمة، من يحتاج حساب Google، الميزات لكل دور، الإعداد التقني، وحل المشاكل
 
 ---
 
